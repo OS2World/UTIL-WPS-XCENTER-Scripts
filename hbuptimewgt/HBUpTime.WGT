@@ -1,0 +1,55 @@
+"Uptime" Widget based on Martin Lafaix Rexx Gauge Widget:
+
+A. Prerequisites:
+
+1. XWPS 0.9.12 or better
+2. Martin Lafaix widget library 0.5.0 or better
+
+B. What it does:
+
+The widget provides a panel showing how long your system is running.
+As is it does not show seconds, it can be updated every 60 seconds.
+
+Put the enclosed RxUptime.DLL ((c) by Anatoly Bekankov) into your LIBAPTH.
+
+That's it, a simple one. Have fun, hope you like it.
+
+C. Other Properties:
+
+Title: Uptime
+
+Refresh rate: 60000
+
+Size: 70 (fixed)
+
+D. REXX Gauge Script:
+
+=========================<begin script>===========================
+/* REXX Uptime Widget */
+
+gauge.background = 'FFFFFF'
+
+/* register RxSystemUptime */
+ok = RxFuncAdd('RxSystemUpTime','RxUptime','RxSystemUptime')
+
+/* get current uptime in milliseconds */
+SysUptime = rxSystemuptime()
+MilliSecs = SysUpTime // 1000
+SysSecs   = SysUpTime %  1000
+Secs      = SysSecs   // 60
+SysMin    = SysSecs   %  60
+Min       = SysMin    // 60
+SysHours  = SysMin    %  60
+Hours     = SysHours  // 24
+Days      = SysHours  %  24
+gauge.text = Days'd-'Hours'h-'Min'm'
+gauge.tooltip = 'Uptime: 'Days' days, 'Hours' hours, 'Min' minutes.'
+
+
+==========================<end script>=============================
+
+E. Double Click Script:
+
+None.
+
+F. Author: Herwig Bauernfeind <herwig.bauernfeind@aon.at>

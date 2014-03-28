@@ -1,0 +1,49 @@
+/* Show desktop (by minimizing windows) or restore minimized windows */
+
+exception.1="Arbeitsoberfl„che" /* "Desktop" */
+exception.2= "Fensterliste" /* "Window List" */
+exception.3="Seamless Window"
+exception.4="Klickstartleiste" /* "Toolbar" "LaunchPad" */
+exception.5="Control Center"
+exception.6="Tab LaunchPad"
+exception.0 = 6  /* must be the number of exceptions you have defined */
+
+call RxFuncAdd 'VRLoadFuncs', 'VROBJ', 'VRLoadFuncs'
+call VRLoadFuncs
+
+if button.user='' then RestoreMode=0; else RestoreMode=1
+if arg(3) <> 0 then RestoreMode=0
+
+if \RestoreMode then do
+	ModWins=''
+	ok = VRMethod( "Screen", "ListWindows", "windows.") 
+	do I = 1 to windows.0
+		PMWH = word(windows.I,1)
+		WinState=VrGet(PMWH,"Windowstate")
+		Caption=VrGet(PMWH,"Caption")
+		if (WinState = 'Normal' | WinState='Maximized') & Caption <> ""then do
+			Do J = 1 to exception.0
+				if pos(exception.J, Caption) > 0 then leave
+			end
+			if J = exception.0 + 1 then do
+				call lineout Profile,PMWH' 'WinState
+				ModWins=ModWins' 'PMWH' 'WinState
+				ok = VRMethod(PMWH,"Minimize")
+			end
+		end
+	end
+	button.user=ModWins
+	button.tooltip='Restore windows'
+end
+else do /* Restore Mode */
+	ModWins=button.user
+	do I = 1 to words(ModWins) by 2
+		PMWH=word(ModWins,I)
+		Winstate=word(ModWins,I+1)
+		if Winstate='Normal' then ok = VRMethod(PMWH,"Restore")
+			else ok = VRMethod(PMWH,"Maximize")
+	end
+	button.user=''
+	button.tooltip='Show desktop'
+end
+exit

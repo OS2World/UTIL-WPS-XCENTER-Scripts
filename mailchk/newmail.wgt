@@ -1,0 +1,212 @@
+MailChecker 0.1.5 based on Sergey Volchenko's Mailchecher 0.1 and 
+Martin Lafaix Rexx Gauge Script:
+
+A. Prerequisites:
+
+1. XWPS 0.9.11 or better
+2. Martin Lafaix widget library 0.5.1 or better
+
+B. What it does:
+
+This is POP3 Mail Cheker.
+
+C. Author
+
+Sergey Volchenko.
+mail-to: wolf@atm-lan.dp.ua
+         w201@mail.ru
+Sound added by: Walter Meinl
+mail-to: wunobln@t-online.de
+
+*------------------------------------------------------------------
+* chkpop.cmd :
+*------------------------------------------------------------------
+* 08-09-92 rnr.cmd published originally by Patrick J. Mueller
+* 24-01-95 adapted as chkpop.cmd by Christoph Lechleitner
+* 15-12-96 fixed for more RFC-compatibility by C. Lechleitner
+* 15-11-01 fixed for XCenter by Sergey Volchenko
+* 25-05-02 added wav sound notification, new colors and double click by W. Meinl
+*------------------------------------------------------------------
+
+D. REXX GAUGE text.
+
+/* Mail Checker */
+server = '192.68.0.1' /* server name or IP address */
+username = 'username' /* login or user name */
+password = 'password' /* password for this account */
+mailsnd = 'x:\pathname\mailsnd.wav' /*  compl. path to wav Sound */
+/* Be careful, if changing sth below this line you might get out of space*/
+gauge.background=FF0000 /* default bgnd to red ("alarm" on all errors) */
+gauge.foreground=000000
+   if RxFuncQuery("SockLoadFuncs") then
+      do
+      rc = RxFuncAdd("SockLoadFuncs","RxSock","SockLoadFuncs")
+      rc = SockLoadFuncs()
+      end
+rc = SockGetHostByName(server,"host.!")
+if (rc = 0) then
+   do
+  gauge.text = 'err 1' /* "Error: Unable to resolve server name" */
+   exit
+   end
+server = host.!addr
+sock = SockSocket("AF_INET","SOCK_STREAM","IPPROTO_TCP")
+if (sock = -1) then
+   do
+    gauge.text = 'err 2'
+   exit
+   end
+server.!family = "AF_INET"
+server.!port   = 110
+server.!addr   = server
+rc = SockConnect(sock,"server.!")
+if (rc = -1) then
+ do
+  gauge.text = 'err 3'
+   Error(sock,rc,"Error connecting to popserver :" errno)
+   exit
+end
+   trc = GetResponse(sock)
+   trc = SendMessage(sock,'USER 'username)
+   trc = GetResponse(sock)
+   parse var line.1 status rest
+   if status <> '+OK' then
+     do
+       qrc = SendMessage(sock,'QUIT')
+       qrc = SockSoclose(sock)
+        gauge.text = 'err 4'
+       exit
+     end
+   trc = SendMessage(sock,'PASS 'password)
+   trc = GetResponse(sock)
+   parse var line.1 status rest
+   if status <> '+OK' then
+     do
+       qrc = SendMessage(sock,'QUIT')
+       qrc = SockSoclose(sock)
+       gauge.text = 'err 8'
+       exit
+     end
+   else
+     do /* 4 */
+       trc = SendMessage(sock,'LIST')
+       trc = GetResponse(sock)
+       messages = 0
+       do /* 3 */
+         msginfo = GetResponseLine(sock)
+         do while msginfo <> '.'
+           messages = messages + 1
+           msginfo = GetResponseLine(sock)
+         end
+           if messages = 0
+         then
+            do
+                gauge.user = 0 /* reset of gauge.user */
+                gauge.text="no mail"
+                gauge.background=000000
+                gauge.foreground=00FF00
+            end
+         else
+           do /* 2 */
+             gauge.foreground=FFFF00
+             gauge.background=000000
+             if messages = 1
+                 then gauge.text = messages "mail"
+               else
+                      gauge.text = messages "mails"
+                 if messages>gauge.user /* play sound only when new mail gets in */
+                  then call PlaySound
+             trc = SendMessage(sock,'LIST')
+             trc = GetResponse(sock)
+             gauge.user=messages /* save messages in gauge.user for next run */
+               do /* 1 */
+               msginfo = GetResponseLine(sock)
+               sizem = 0
+               do while msginfo <> '.'
+                 parse var msginfo number size
+                 sizem = sizem + size
+                 msginfo = GetResponseLine(sock)
+               end
+             gauge.tooltip = 'Total size: ' sizem
+             end /* do 1 */
+       end /* do 2 */
+     end /* do 3 */
+    end /* 4 */
+   trc = SendMessage(sock,'QUIT')
+   trc = GetResponse(sock)
+rc = SockSoclose(sock)
+exit
+GetResponse:     procedure expose !. line.
+   sock = arg(1)
+   moreids = "100 215 220 221 222 223 230 231"
+   line.0 = 1
+   line.1 = GetResponseLine(sock)
+   parse var line.1 rid .
+   if (wordpos(rid,moreids) = 0) then
+      return ""
+   do forever
+      o = line.0 + 1
+      line.o = GetResponseLine(sock)
+      if (line.o = ".") then
+         return ""
+      line.0 = o
+   end
+   return ""
+GetResponseLine: procedure expose !.
+   sock = arg(1)
+  crlf = d2c(13) || d2c(10)
+   if (symbol('!.buff') = "LIT") then
+      !.buff = ""
+   do while (pos(crlf,!.buff) = 0)
+      rc = SockRecv(sock,"data",8000)
+      !.buff = !.buff || data
+   end
+   p = pos(crlf,!.buff)
+   line = substr(!.buff,1,p-1)
+   !.buff = substr(!.buff,p+2)
+   return line
+SendMessage:     procedure expose !.
+   sock = arg(1)
+   data = arg(2) || d2c(13) || d2c(10)
+   len = length(data)
+   do while (len > 0)
+      len = SockSend(sock,data);
+      if (len <= 0) then
+         Error(sock,100,"Server closed the connection.")
+      data = substr(data,len+1)
+      len  = length(data)
+   end
+   return i
+PlaySound:
+call RXFUNCADD 'mciRxInit','MCIAPI','mciRxInit'
+call mciRxInit
+rc = mciRxSendString('open waveaudio alias wave shareable wait', 'RetStr', '0', '0')
+rc = mciRxSendString('load wave 'mailsnd' wait', 'RetStr', '0', '0')
+call mciRxSendString 'play wave wait', 'RetStr', '0', '0'
+call mciRxSendString 'close wave', 'RetStr', '0', '0'
+call mciRxExit
+return
+Halting:
+   Error(sock,1,"error on line" sigl)
+Error: procedure
+   sock = arg(1)
+   retc = arg(2)
+   msg  = arg(3)
+   if (sock <> -1) then
+      rc = SockSoClose(sock)
+  exit retc
+
+E: Sample Text for Double Click Action
+
+* Depending on your favorite Mail Program you have to put in the correct Object ID
+* found on the symbol settings page under 'details', e.g. it may be <MOZILLAMAIL>,
+* <WARPZILLAMAIL> or <NS46_MESSENGER>
+*----------------------------------------------------------------------------
+
+/* Open Mozilla Mail */
+
+call RxFuncAdd 'SysLoadFuncs','RexxUtil','SysLoadFuncs'
+call SysLoadFuncs
+  
+SysOpenObject("<MOZILLAMAIL>","DEFAULT","TRUE")
+exit

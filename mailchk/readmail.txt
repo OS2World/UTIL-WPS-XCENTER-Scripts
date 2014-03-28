@@ -1,0 +1,53 @@
+Hi,
+this is my first cautious step in learning of REXX programming, so don't expect that it works immedeately. (It works great
+on my bot eCS 1.02 XWP 0.9.18-2, but I was the only beta-tester.) However it should not harm your pc if it doesnt do what it
+is expected to do, so maybe you want to give it a try  :))
+
+I must admit that I would (at this point) never be able to write such a script on my own. Therefore I took what I
+could find, and that was the script originally placed in the community by Sergey Volchenko, thanks.
+I tried to contact him to ask him whether he would allow me to post his work with some additions I made, however
+I did not get an answer yet. But as I liked the successful outcome, I would really appreciate if I can get some
+feedback, maybe some other Xworkplace users like the result, too. I hope this is ok, since I mentioned still Sergey to be
+the main author of the script.
+When I installed the original version, I found it (just after a couple of minutes) very annoying that the script notified me
+with a beep by my pc speaker, and it was more annoying that it repeated the beep until I downloaded my email completely
+The first step was to integrate a wav sound instead of the beep (that was done mainly using the example provided
+in the REXX Multimedia help by IBM). Then it was still annoying that now the wav sound was repeated at every refresh
+of the script. I found a way to get it work that it notifies only once when the number of emails increases. The next thing
+I changed was the colors they are now somewhat what we know from scenterprettyclock. However in any error condition
+the background turns to red.
+The last thing I added was a double click action to start my default mail program. You need to find out the object-ID
+of your mail program and exchange it against my favorite <MOZILLAMAIL> Moz 1.0, e.g. <CCINBOX> created by Moz. 1.1a.
+Since you are using XworkPlace you can find in the object settings page under "Symbol" and then button "Detail".
+The main drawback of this script is the fact that it is almost as long as allowed for a REXX gauge. Therefore any
+changes you make (please feel free to do so) may result in an error due a "cut off" of the last lines, be careful about that.
+I have removed nearly all comments and blank lines. Maybe, if I have the time I will have a look to reduce the number
+of lines (maybe I find possibilities to reduce the code).
+I would really appreciate any comments on the script either in the Xworkplace Yahoo group or to my personal email 
+wunobln@t-online.de
+Thanks to Ulrich Moeller for his great job with Xworkplace (hopefully I will be able to contribute to it in some way
+in the future).
+I would recommend to set the time refresh of the gauge to 60000 ms, which seems to be the longest time allowed.
+(I tried to enter longer times but when I opened the setting page again it was automatically reduced to a very short
+time).
+Have fun
+Walter
+
+Remark: Colors are some sort of taste, I have chosen a black background with green text, if no new mail is present, the
+text color turns to yellow, if new mail is at the server. In case of any error as stated above the background is red to
+have an "alarm" color. It was the easiest way of programming to default to the "error" colors, since error cases are the
+most in the script. However you won't see red if everything works fine.
+If you don't like the colors its the easiest way to remove all lines containing gauge.background and gauge.foreground.
+Then you should return to the default Xcenter colors. If you want to have other colors just edit the hex numbers
+after gauge.background or gauge.forground (see also rexx gauge help).
+I also decided to have not just plain numbers indicating the numbers of mails on the pop-server. If you don't like the
+additional word "mail" or "mails", respectively, to be displayed just do the following:
+find the lines:
+gauge.text= "no mail" and replace it with gauge.text = 0
+AND the complete lines:
+               if messages = 1
+                 then gauge.text = messages "mail"
+               else
+                      gauge.text = messages "mails"
+and replace it with: gauge.text = messages
+this returns just the numbers of mails on the pop-server

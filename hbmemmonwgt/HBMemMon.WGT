@@ -1,0 +1,88 @@
+MemoryMonitor based on Martin Lafaix Rexx Gauge Script:
+
+A. Prerequisites:
+
+1. XWPS 0.9.11 or better
+2. Martin Lafaix widget library 0.5.1 or better
+3. RxExtras.DLL by Dion Gillard (look for RXX1G.ZIP (1996) on 
+   hobbes, it does not seem to be actively maintained anymore)
+4. RxUptime.DLL by Anatoly Bekankov (package enclosed)
+   
+B. What it does:
+
+It show the ammount of physical memory that is currently free in
+MB not KB. Otherwise this figure is exactly the same as the "Free 
+physical memory widget" enclosed with XWPS itself.
+
+In addition the gauge colors represent the same value as the ones
+on the "Sentinel widget" enclosed with XWPS.
+
+The tooltip shows the size of the swapfile plus some other memory
+related figures (it shows more than memory widget and sentinel widget).
+
+Well, you might say now, why bother with this monitor? You are right.
+Basically, this is a mixture from Stardocks memory display on Control
+Center, XWPS's memory widget and XWPS's sentinel widget in one compact
+widget... nothing more nothing less.
+
+
+C. Other Properties:
+
+Refresh rate: 5000
+Resizable
+
+D. Gauge Script:
+
+=========================<begin script>===========================
+/* Memory Monitor */
+
+/* Enter your location for the swapfile here */
+SwapperDat = 'F:\TEMP\SWAPPER.DAT'
+
+/* Do not modify code from here, unless you know what you are doing! */
+if RxFuncQuery('RxExtra')  \= 0 then do
+    Call RxFuncAdd 'RxExtra', 'RxExtras', 'RxExtra'
+    Call RxExtra 'Load'
+end
+        
+call RxFuncAdd 'RxSystemMemory','RxUptime','RxSystemMemory'
+
+/* Init colors */
+GAUGE.COLOR1 = '800080'
+GAUGE.COLOR2 = '000080'
+GAUGE.COLOR3 = 'FF0000'
+
+GAUGE.BACKGROUND='008000'
+GAUGE.FOREGROUND='FFFFFF'
+ok = SysFileTree(SwapperDat,SwapFile.,'F')
+parse value swapFile.1 with Datum Zeit Groesse Attribute Datei
+swf = Groesse     %  1048576
+frm = RxMemAvail()% 1048576
+phm = RxSystemMemory('p')% 1048576
+rsm = RxSystemMemory('r')% 1048576
+avm = RxSystemMemory()% 1048576
+ttm = phm + swf
+usm = phm- frm
+gauge.1 = swf / ttm *100
+gauge.2 = (swf + usm) /ttm *100
+gauge.3 = (ttm-frm) / ttm * 100
+
+
+CRLF = d2c(13)||d2c(10)
+
+gauge.text= 'Free Mem:'frm'MB'
+gauge.tooltip= 'Swapfile size:              'swf' MB'||CRLF||,
+               'Physical Memory:  'phm'MB'||CRLF||,
+               'Resident Memory:    'rsm'MB'||CRLF||,
+               'Used Memory:            'usm'MB'||CRLF||, 
+               'Available Memory:'avm'MB'
+               
+E. Double Click Action:
+
+==========================<begin script>===========================
+/*  Open XWPS Kernel Object */
+
+ok = SysSetObjectData("<XWP_KERNEL>","OPEN=DEFAULT")
+==========================<end script>=============================
+
+F. Author: Herwig Bauernfeind <herwig.bauernfeind@aon.at>

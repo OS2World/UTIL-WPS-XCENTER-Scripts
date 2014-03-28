@@ -1,0 +1,103 @@
+"Stop Watch" Widget based on Martin Lafaix Rexx Gauge Widget:
+
+A. Prerequisites:
+
+1. XWPS 0.9.12 or better
+2. Martin Lafaix widget library 0.5.0 or better
+
+B. What it does:
+
+The widget provides a stopwatch similar to the one found on
+the WarpCenter (eCS-Center).
+
+Doubleclick in order to start, then
+doubleclick in order to stop, then
+doubleclick in order to reset.
+
+That's it. Have fun, hope you like it.
+
+D. What's new in 1.0.1:
+
+Fixed a bug that showed up when the stopwatch was running for more than
+1 hour...
+
+E. Other Properties:
+
+Title: Stop Watch
+
+Refresh rate: 1000
+
+Size: 60 (fixed)
+
+F. REXX Gauge Script:
+
+=========================<begin script>===========================
+/* Stop Watch */
+GAUGE.COLOR1 = 'B0B0F0'
+GAUGE.COLOR2 = '000080'
+GAUGE.COLOR3 = 'FFC0B0'
+
+GAUGE.BACKGROUND='FFFFFF'
+GAUGE.FOREGROUND='000000'
+if gauge.user = '' then call init
+
+Status = word(gauge.user,1)
+ElTime = word(gauge.user,2)
+
+gauge.tooltip = Status
+
+select 
+  when Status = 'Running' then do
+    CurTime = time('S')-ElTime
+    Texter = 'R: '||maketime(CurTime)
+    gauge.1 = ((CurTime // 60) )* 100  % 60
+  end
+  when Status = 'Init' then Texter = 'I : --:--:--'
+  when Status = 'Stopped' then do
+    Texter ='S: 'maketime(ElTime)
+    gauge.3 = 100
+  end
+  otherwise Texter = 'nop'
+end
+
+gauge.text = Texter
+
+exit
+
+init:
+  gauge.user = 'Init 0'
+return
+
+maketime:
+  parse arg seconds
+  SS = seconds // 60
+  MM = seconds % 60
+  HH = MM % 60
+  MM = MM // 60
+  SS = right('0'||SS,2)
+  MM = right('0'||MM,2)
+  HH = right('0'||HH,2)
+  timestring = HH':'MM':'SS
+return(timestring)
+==========================<end script>=============================
+
+G. Double Click Script:
+
+=========================<begin script>===========================
+/* Stop Watch "button" */
+
+Status = word(gauge.user,1)
+ElTime = word(gauge.user,2)
+
+select
+  when Status = 'Running' then gauge.user = 'Stopped 'time('S')-ElTime
+  when Status = 'Init' then gauge.user = 'Running 'time('S')
+  when Status = 'Stopped' then gauge.user = 'Init 0'
+  otherwise do 
+    gauge.user = 'Init 0'
+  end
+end
+==========================<end script>=============================
+
+
+H. Author: Herwig Bauernfeind <herwig.bauernfeind@aon.at>

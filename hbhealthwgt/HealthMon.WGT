@@ -1,0 +1,70 @@
+HealthMonitor based on Martin Lafaix Rexx Gauge Script:
+
+A. Prerequisites:
+
+1. XWPS 0.9.11 or better 
+2. Martin Lafaix widget library 0.5.x 
+3. Stefan Milcke's STHWMon Package
+
+
+B. What it does:
+
+The widget shows CPU temparature and CPU fan speed in the
+display and various other values on the tooltip. All 
+values need to be reconfigured if you do not have an ASUS
+P5-AB mainboard, because especially the fan connectors 
+might be setup differently on your board. See comments
+in the script how the values correspond to with my board.
+
+A double click on the widget opens my own Health Monitor,
+which is also based on Stefan Milcke's STHWmon Package.
+It is currently not publicly available, only upon request.
+
+C. Other Properties:
+
+Refresh rate: 1000
+Resizable
+
+D. Gauge Script:
+
+=========================<begin script>===========================
+/* Health MonitorGauge */
+
+/* Initialize StHealth */
+rc=RxFuncAdd('StHealthLoadFuncs','StHealth','StHealthLoadFuncs')
+Call StHealthLoadFuncs
+
+V1=StHealthValue(VOLT,1)  /* Core Voltage 1 */
+V2=StHealthValue(VOLT,2)  /* Core Voltage 2 */
+V3=StHealthValue(VOLT,3)  /* IO Voltage */
+V4=StHealthValue(VOLT,4)  /* +5 Volt */
+V5=StHealthValue(VOLT,5)  /* -5 Volt */
+V6=StHealthValue(VOLT,6)  /* +12 Volt */ 
+V7=StHealthValue(VOLT,7)  /* -12 Volt */ 
+T1=StHealthValue(TEMP,1)	 /* CPU  */
+T2=StHealthValue(TEMP,2)  /* MaBo */
+T3=StHealthValue(TEMP,3)  /* Nonsense */
+F1=StHealthValue(FAN,1)   /* MaBo */
+F2=StHealthValue(FAN,2)	 /* CPU  */
+F3=StHealthValue(FAN,3)	 /* Power, I use it for video */
+CT=StHealthChip(FULL)	 /* Chip ID */
+   
+if T1 < 30 then Gauge.1 = 100
+if T1 >= 30 then Gauge.2 = 100
+if T1 > 35 then Gauge.3 = 100
+
+Gauge.ToolTip ='MaBo:'trunc(T2)'øC/'trunc(F1)'rpm,'||,
+               'MGA:'trunc(F3)'rpm, VCore: 'V1'/'V2', '||,
+               'VIO: 'V3
+Gauge.Text = 'CPU:'trunc(T1)'øC/'trunc(F2)'rpm'
+==========================<end script>=============================
+
+E. Double Click Action:
+
+==========================<begin script>===========================
+/*  Open HBHealthMon */
+
+ok = SysSetObjectData("<HBHealthMon>","OPEN=DEFAULT")
+==========================<end script>=============================
+
+F. Author: Herwig Bauernfeind <herwig.bauernfeind@aon.at>
